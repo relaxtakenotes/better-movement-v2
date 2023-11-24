@@ -459,7 +459,6 @@ local function PlayStepSound(ply, vecOrigin, psurface, fvol, force)
         end
 
         if SERVER then
-            print("Serversided footstep")
             local result = hook.Run("PlayerFootstep", ply, vecOrigin, ply.m_nStepside, path, fvol, nil)
             if game.SinglePlayer() and result == nil then
                 ply:EmitSound(path, 75, 100, fvol, CHAN_BODY, 0, 0)
@@ -478,7 +477,6 @@ local function PlayStepSound(ply, vecOrigin, psurface, fvol, force)
         // can be here only if it's multiplayer and we are a client
         // otherwise we let the server do the work
         if CLIENT then
-            print("Clientsided footstep")
             if hook.Run("PlayerFootstep", ply, vecOrigin, ply.m_nStepside, path, fvol, nil) == nil then
                 ply:EmitSound(path, 75, 100, fvol, CHAN_BODY, 0, 0)
                 //EmitSound(path, vecOrigin, ply:EntIndex(), CHAN_BODY, fvol, 75, SND_NOFLAGS, 100, 0)
@@ -590,15 +588,17 @@ local function UpdateStepSound(ply, psurface, vecOrigin, vecVelocity)
 	if ply:Crouching() then
 		fvol = fvol * 0.65
     end
+    
 
 	PlayStepSound(ply, vecOrigin, psurface, fvol, false)
 end
 
-hook.Add("Tick", "baseplayer_simulate", function()
+hook.Add("Think", "bm_footstep_think", function()
     if not bm_vars.enabled:GetBool() or not bm_vars.slow_footsteps:GetBool() then return end
 
     if not game.SinglePlayer() and CLIENT then
         local lp = LocalPlayer()
+        if not IsValid(lp) then return end
         lp:SetKeyValue("m_flStepSoundTime", 9999)
         UpdateStepSound(lp, GetGroundSurface(lp), lp:GetPos(), lp:GetVelocity())
     end
@@ -635,7 +635,7 @@ if not game.SinglePlayer() and CLIENT then
         local fvol = net.ReadFloat()
 
         if ply == LocalPlayer() then return end // we're calculating our own footsteps #swag
-        print("Networked footstep")
+
         if hook.Run("PlayerFootstep", ply, vecOrigin, path, foot, fvol, nil) == nil then
             ply:EmitSound(path, 75, 100, fvol, CHAN_BODY, 0, 0)
             //EmitSound(path, vecOrigin, ply:EntIndex(), CHAN_BODY, fvol, 75, SND_NOFLAGS, 100, 0)
