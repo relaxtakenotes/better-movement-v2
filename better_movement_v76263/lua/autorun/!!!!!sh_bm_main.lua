@@ -85,7 +85,7 @@ end
 hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     if not bm_vars.enabled:GetBool() then return end
 
-    local maxspeed = ply:GetMaxSpeed()
+    local maxspeed = ply:GetMaxSpeed() / ply:GetNW2Var("bmfraction", 1)
     
     local forwardmove = math.Clamp(cmd:GetForwardMove(), -maxspeed, maxspeed)
     local sidemove = math.Clamp(cmd:GetSideMove(), -maxspeed, maxspeed)
@@ -94,10 +94,6 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
         local nf_mult = bm_vars.slowdown.non_forward_multiplier:GetFloat()
         sidemove = sidemove * 0.75 * nf_mult
         if forwardmove < 0 then forwardmove = forwardmove * 0.75 * nf_mult end
-        if math.abs(sidemove) > 0 then
-            forwardmove = forwardmove * 0.75 * nf_mult
-            sidemove = sidemove * 0.75 * nf_mult
-        end
     end
 
     // handle weakness
@@ -174,12 +170,13 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
             angle = angle * -1
         end
         
-        local thing = (1 - math.min(angle, 90) / 90 * 0.5)
+        local am_mult = bm_vars.slowdown.angle_multiplier:GetFloat()
+
+        local thing = (1 - math.min(angle * am_mult, 90) / 90 * 0.5)
 
         if angle > 0 then
-            local am_mult = bm_vars.slowdown.angle_multiplier:GetFloat()
-            forwardmove = forwardmove * thing * am_mult
-            sidemove = sidemove * thing * am_mult
+            forwardmove = forwardmove * thing
+            sidemove = sidemove * thing
         end
     end
 
@@ -225,9 +222,9 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     // handle turn slowdown
     if bm_vars.slowdown.turn_enabled:GetBool() then
-        local mult = bm_vars.slowdown.turn_multiplier:GetFloat()
+        local mult = math.max(bm_vars.slowdown.turn_multiplier:GetFloat(), 0.05)
         local factor = math.Remap(math.Clamp(math.abs(cmd:GetMouseX() / 20 * mult), 0, 100 * mult / 2), 0, 100 * mult / 2, 1, 0)
-        ply:SetNW2Var("mouse_slowdown", Lerp(FrameTime() * 50 / math.max(mult, 1), ply:GetNW2Var("mouse_slowdown", 0), factor))
+        ply:SetNW2Var("mouse_slowdown", Lerp(FrameTime() * 50 / mult, ply:GetNW2Var("mouse_slowdown", 0), factor))
     end
 
     // handle being in air
@@ -261,7 +258,17 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
                                         ply:GetNW2Var("lerped_sidemove", 0), 
                                         sidemove) * ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1))
 
-    ply:SetNW2Var("new_maxspeed", math.sqrt(ply:GetNW2Var("lerped_sidemove", 0)^2 + ply:GetNW2Var("lerped_forwardmove", 0)^2) * ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1), 30) // for later use in playerfootstep hookenz
+    local _forward = ply:GetNW2Var("lerped_forwardmove", 0)
+    local _side = ply:GetNW2Var("lerped_sidemove", 0)
+
+    // haha, damned math
+    local maxspeed_raw = math.sqrt(_side^2 + _forward^2)
+    if maxspeed_raw > maxspeed then
+        _forward = _forward * (math.abs(_forward) / maxspeed_raw) 
+        _side = _side * (math.abs(_side) / maxspeed_raw)
+    end
+
+    ply:SetNW2Var("new_maxspeed", math.sqrt(_side^2 + _forward^2) * ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1), 30) // for later use in playerfootstep hookenz
 
     // apply it all
     local walktype = "walk"
@@ -272,7 +279,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     if mv:KeyWasDown(IN_SPEED) then previous_walktype = "run" end
     if mv:KeyWasDown(IN_WALK) then previous_walktype = "slowwalk" end
 
-    local new_maxspeed = Vector(ply:GetNW2Var("lerped_forwardmove", 0), ply:GetNW2Var("lerped_sidemove", 0), 0):Length2D()
+    local new_maxspeed = ply:GetNW2Var("new_maxspeed")
     local fraction = math.Clamp(new_maxspeed / maxspeed, 1, 2)
     ply:SetNW2Var("bmfraction", Lerp(FrameTime() * 20, ply:GetNW2Var("bmfraction", 1), fraction))
     
@@ -290,9 +297,6 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     end
 
     if ply:GetMoveType() == MOVETYPE_WALK then
-        local _forward = ply:GetNW2Var("lerped_forwardmove", 0)
-        local _side = ply:GetNW2Var("lerped_sidemove", 0)
-
         mv:SetForwardSpeed(_forward)
         mv:SetSideSpeed(_side)
         cmd:SetForwardMove(_forward)
