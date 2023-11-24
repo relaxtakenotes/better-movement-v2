@@ -225,8 +225,9 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     // handle turn slowdown
     if bm_vars.slowdown.turn_enabled:GetBool() then
-        local factor = math.Remap(math.Clamp(math.abs(cmd:GetMouseX() / 20), 0, 100), 0, 100, 1, 0) * bm_vars.slowdown.turn_multiplier:GetFloat()
-        ply:SetNW2Var("mouse_slowdown", Lerp(FrameTime() * 50, ply:GetNW2Var("mouse_slowdown", 0), factor))
+        local mult = bm_vars.slowdown.turn_multiplier:GetFloat()
+        local factor = math.Remap(math.Clamp(math.abs(cmd:GetMouseX() / 20 * mult), 0, 100 * mult / 2), 0, 100 * mult / 2, 1, 0)
+        ply:SetNW2Var("mouse_slowdown", Lerp(FrameTime() * 50 / math.max(mult, 1), ply:GetNW2Var("mouse_slowdown", 0), factor))
     end
 
     // handle being in air
