@@ -628,7 +628,7 @@ hook.Add("OnPlayerHitGround", "bm_fix_weirdness", function(ply, inwater, onfloat
 
     fsteptime = math.Clamp(fsteptime, bm_vars.steptime.min:GetFloat(), bm_vars.steptime.max:GetFloat())
 
-    ply.m_flStepSoundTime = ply.m_flStepSoundTime + fsteptime
+    ply.m_flStepSoundTime = (ply.m_flStepSoundTime or 0) + fsteptime
 end)
 
 if not game.SinglePlayer() and CLIENT then
