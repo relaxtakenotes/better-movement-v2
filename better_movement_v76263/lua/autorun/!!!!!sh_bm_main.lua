@@ -85,38 +85,51 @@ end
 hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     if not bm_vars.enabled:GetBool() then return end
 
-    local maxspeed = ply:GetMaxSpeed() / ply:GetNW2Var("bmfraction", 1)
+    local maxspeed = ply:GetMaxSpeed()
     
-    local forwardmove = cmd:GetForwardMove() / 10000 * maxspeed//math.Clamp(cmd:GetForwardMove(), -maxspeed, maxspeed)
-    local sidemove = cmd:GetSideMove() / 10000 * maxspeed //math.Clamp(cmd:GetSideMove(), -maxspeed, maxspeed)
+    local forwardmove = cmd:GetForwardMove() / 10000 * maxspeed
+    local sidemove = cmd:GetSideMove() / 10000 * maxspeed
     
     if bm_vars.slowdown.non_forward:GetBool() then
         local nf_mult = bm_vars.slowdown.non_forward_multiplier:GetFloat()
         sidemove = sidemove * 0.75 * nf_mult
-        if forwardmove < 0 then forwardmove = forwardmove * 0.75 * nf_mult end
+        if forwardmove < 0 then 
+            forwardmove = forwardmove * 0.75 * nf_mult
+            maxspeed = math.abs(forwardmove)
+        end
+
     end
+
+    local origin = mv:GetOrigin()
+    local onground = ply:OnGround()
+    local waterlevel = ply:WaterLevel()
 
     // handle weakness
     if bm_vars.slowdown.weakness_enabled:GetBool() then
-        ply:SetNW2Var("previous_origin", ply:GetNW2Var("current_origin", mv:GetOrigin()))
-        ply:SetNW2Var("current_origin", mv:GetOrigin())
+        ply:SetNW2Var("previous_origin", ply:GetNW2Var("current_origin", origin))
+        ply:SetNW2Var("current_origin", origin)
 
         local diff = ply:GetNW2Var("current_origin") - ply:GetNW2Var("previous_origin")
 
-        if diff.z > 0 and ply:OnGround() then
-            ply:SetNW2Var("weakness", ply:GetNW2Var("weakness", 0) + diff.z / 20 * bm_vars.slowdown.weakness_multiplier:GetFloat())
+        local weakness = ply:GetNW2Var("weakness", 0)
+
+        if diff.z > 0 and onground then
+            weakness = weakness + diff.z / 20 * bm_vars.slowdown.weakness_multiplier:GetFloat()
         end
 
         if math.abs(forwardmove) + math.abs(sidemove) > 0.1 then
-            ply:SetNW2Var("weakness", ply:GetNW2Var("weakness", 0) + FrameTime() * 10.1 * bm_vars.slowdown.weakness_multiplier:GetFloat() * (maxspeed / bm_vars.speed.run:GetFloat()))
+            weakness = weakness + FrameTime() * 10.1 * bm_vars.slowdown.weakness_multiplier:GetFloat() * (maxspeed / bm_vars.speed.run:GetFloat())
         end
 
-        ply:SetNW2Var("weakness", math.Clamp(ply:GetNW2Var("weakness", 0) - FrameTime() * 9 * bm_vars.slowdown.weakness_rest_multiplier:GetFloat(), 0, 128))
+        weakness = math.Clamp(weakness - FrameTime() * 9 * bm_vars.slowdown.weakness_rest_multiplier:GetFloat(), 0, 128)
+
+        ply:SetNW2Var("weakness", weakness)
 
         local cw_thing = (1 - ply:GetNW2Var("weakness", 0) / 128 * 0.5)
 
         forwardmove = forwardmove * cw_thing
         sidemove = sidemove * cw_thing
+        maxspeed = maxspeed * cw_thing
     end
 
     // handle slowdown on landing
@@ -135,11 +148,9 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
         local maxs = ply:OBBMaxs()
         local mins = ply:OBBMins()
-        local offset = Vector(0, 0, ply:GetStepSize() + 2)
+        local offset = vector_up * (ply:GetStepSize() + 2)
 
         maxs:Sub(offset)
-        
-        local origin = mv:GetOrigin()
 
         local first_tr = util.TraceHull({
             start = origin + offset,
@@ -151,7 +162,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
         local second_tr = util.TraceHull({
             start = first_tr.HitPos,
-            endpos = first_tr.HitPos - Vector(0,0,100),
+            endpos = first_tr.HitPos - vector_up * 100,
             filter = ply,
             maxs = maxs,
             mins = mins
@@ -177,6 +188,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
         if angle > 0 then
             forwardmove = forwardmove * thing
             sidemove = sidemove * thing
+            maxspeed = maxspeed * thing
         end
     end
 
@@ -201,6 +213,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     // handle being inside
     if bm_vars.inside_checks_enabled:GetBool() then
         ply:SetNW2Var("env_check_timeout", math.max(ply:GetNW2Var("env_check_timeout", 0) - FrameTime(), 0))
+
         if ply:GetNW2Var("env_check_timeout", 0) <= 0 and mv:GetVelocity():Length() > 0 then
             if get_env_state(mv:GetOrigin() + Vector(0,0,40)) == "indoors" then
                 ply:SetNW2Var("env_is_inside", true)
@@ -215,9 +228,12 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
         else
             ply:SetNW2Var("env_slowdown", Lerp(FrameTime() * 3, ply:GetNW2Var("env_slowdown", 1), 1))
         end
+
+        local slowdown = ply:GetNW2Var("env_slowdown", 1)
         
-        forwardmove = forwardmove * ply:GetNW2Var("env_slowdown", 1)
-        sidemove = sidemove * ply:GetNW2Var("env_slowdown", 1)
+        forwardmove = forwardmove * slowdown
+        sidemove = sidemove * slowdown
+        maxspeed = maxspeed * slowdown
     end
 
     // handle turn slowdown
@@ -228,74 +244,70 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     end
 
     // handle being in air
-    if not ply:OnGround() and bm_vars.slowdown.in_air:GetBool() and ply:WaterLevel() < 2 then
+    if not onground and bm_vars.slowdown.in_air:GetBool() and waterlevel < 2 then
         forwardmove = forwardmove * 0.1
         sidemove = sidemove * 0.1
     end
 
     // drowning!! wow
-    if not ply:OnGround() and ply:WaterLevel() >= 2 then
+    if not onground and waterlevel >= 2 then
 		mv:SetUpSpeed(-100)
 		cmd:SetUpMove(-100)
 	end
 
     if ply:Crouching() then
+        local mult = 1
+
         if cmd:KeyDown(IN_SPEED) then
-            forwardmove = forwardmove * math.min(1, bm_vars.speed.crouch:GetFloat() * 2)
-            sidemove = sidemove * math.min(1, bm_vars.speed.crouch:GetFloat() * 2)
+            mult = math.min(1, bm_vars.speed.crouch:GetFloat() * 2)
         else
-            forwardmove = forwardmove * bm_vars.speed.crouch:GetFloat()
-            sidemove = sidemove * bm_vars.speed.crouch:GetFloat()          
+            mult = bm_vars.speed.crouch:GetFloat()
         end
+
+        forwardmove = forwardmove * mult
+        sidemove = sidemove * mult
     end
 
     // lerp everything
     local mult = bm_vars.interpolation_multiplier:GetFloat()
+    local more_slowdown = ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1)
+
+    maxspeed = maxspeed * more_slowdown
+
+    local early_speed = math.sqrt(math.abs(forwardmove)^2 + math.abs(sidemove)^2)
+    if early_speed > maxspeed then
+        forwardmove = forwardmove * maxspeed / early_speed
+        sidemove = sidemove * maxspeed / early_speed
+    end
+
     ply:SetNW2Var("lerped_forwardmove", Lerp(FrameTime() * arse(ply, "lerped_forwardmove", forwardmove) * 10 * mult, 
                                             ply:GetNW2Var("lerped_forwardmove", 0), 
-                                            forwardmove) * ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1))
+                                            forwardmove) * more_slowdown)
     ply:SetNW2Var("lerped_sidemove", Lerp(FrameTime() * arse(ply, "lerped_sidemove", sidemove) * 10 * mult, 
                                         ply:GetNW2Var("lerped_sidemove", 0), 
-                                        sidemove) * ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1))
+                                        sidemove) * more_slowdown)
 
     local _forward = ply:GetNW2Var("lerped_forwardmove", 0)
     local _side = ply:GetNW2Var("lerped_sidemove", 0)
 
-    // haha, damned math
     local maxspeed_raw = math.sqrt(_side^2 + _forward^2)
-    if maxspeed_raw > maxspeed then
-        _forward = _forward * (math.abs(_forward) / maxspeed_raw) 
-        _side = _side * (math.abs(_side) / maxspeed_raw)
-    end
 
-    ply:SetNW2Var("new_maxspeed", math.sqrt(_side^2 + _forward^2) * ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1), 30) // for later use in playerfootstep hookenz
-
+    ply:SetNW2Var("new_maxspeed", maxspeed_raw, 30)
+    
     // apply it all
     local walktype = "walk"
     if mv:KeyDown(IN_SPEED) then walktype = "run" end
     if mv:KeyDown(IN_WALK) then walktype = "slowwalk" end
-
-    local previous_walktype = "walk"
-    if mv:KeyWasDown(IN_SPEED) then previous_walktype = "run" end
-    if mv:KeyWasDown(IN_WALK) then previous_walktype = "slowwalk" end
-
-    local new_maxspeed = ply:GetNW2Var("new_maxspeed")
-    local fraction = math.Clamp(new_maxspeed / maxspeed, 1, 2)
+    
+    local fraction = math.Clamp(maxspeed_raw / maxspeed, 1, 2)
     ply:SetNW2Var("bmfraction", Lerp(FrameTime() * 20, ply:GetNW2Var("bmfraction", 1), fraction))
     
     local _bmfraction = ply:GetNW2Var("bmfraction", 1)
-    if walktype == "walk" then
-        ply:SetWalkSpeed(bm_vars.speed.walk:GetFloat() * _bmfraction)
-    end
-
-    if walktype == "run" then
-        ply:SetRunSpeed(bm_vars.speed.run:GetFloat() * _bmfraction)
-    end
-
-    if walktype == "slowwalk" then
-        ply:SetSlowWalkSpeed(bm_vars.speed.slowwalk:GetFloat() * _bmfraction)
-    end
-
+    
+    ply:SetWalkSpeed(bm_vars.speed.walk:GetFloat() * _bmfraction)
+    ply:SetRunSpeed(bm_vars.speed.run:GetFloat() * _bmfraction)
+    ply:SetSlowWalkSpeed(bm_vars.speed.slowwalk:GetFloat() * _bmfraction)
+    
     if ply:GetMoveType() == MOVETYPE_WALK then
         mv:SetForwardSpeed(_forward)
         mv:SetSideSpeed(_side)
@@ -649,7 +661,5 @@ if not game.SinglePlayer() and CLIENT then
 end
 
 hook.Add("PlayerFootstep", "bm_sync_foot", function(ply, pos, foot, ...) 
-
     ply.m_nStepside = foot
-
 end)
