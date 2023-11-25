@@ -428,7 +428,7 @@ local function GetGroundSurface(ply)
         mins = ply:OBBMins(),
         maxs = ply:OBBMaxs(),
         filter = ply,
-        mask = MASK_PLAYERSOLID_BRUSHONLY,
+        mask = MASK_PLAYERSOLID,
         collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
     }
 
