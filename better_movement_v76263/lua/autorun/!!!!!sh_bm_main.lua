@@ -87,8 +87,8 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     local maxspeed = ply:GetMaxSpeed() / ply:GetNW2Var("bmfraction", 1)
     
-    local forwardmove = math.Clamp(cmd:GetForwardMove(), -maxspeed, maxspeed)
-    local sidemove = math.Clamp(cmd:GetSideMove(), -maxspeed, maxspeed)
+    local forwardmove = cmd:GetForwardMove() / 10000 * maxspeed//math.Clamp(cmd:GetForwardMove(), -maxspeed, maxspeed)
+    local sidemove = cmd:GetSideMove() / 10000 * maxspeed //math.Clamp(cmd:GetSideMove(), -maxspeed, maxspeed)
     
     if bm_vars.slowdown.non_forward:GetBool() then
         local nf_mult = bm_vars.slowdown.non_forward_multiplier:GetFloat()
@@ -550,7 +550,7 @@ local function UpdateStepSound(ply, psurface, vecOrigin, vecVelocity)
 			return
         end
 
-        ply.iSkipStep = ply.iSkipStep + 1
+        ply.iSkipStep = (ply.iSkipStep or 0) + 1
 
 		if ply.iSkipStep == 3 then
 			ply.iSkipStep = 0
@@ -604,13 +604,13 @@ hook.Add("Think", "bm_footstep_think", function()
     if not game.SinglePlayer() and CLIENT then
         local lp = LocalPlayer()
         if not IsValid(lp) then return end
-        lp:SetKeyValue("m_flStepSoundTime", 9999)
+        //lp:SetKeyValue("m_flStepSoundTime", 9999)
         UpdateStepSound(lp, GetGroundSurface(lp), lp:GetPos(), lp:GetVelocity())
     end
 
     if SERVER then
         for i, ply in ipairs(player.GetAll()) do 
-            ply:SetKeyValue("m_flStepSoundTime", 9999)
+            //ply:SetKeyValue("m_flStepSoundTime", 9999)
             UpdateStepSound(ply, GetGroundSurface(ply), ply:GetPos(), ply:GetVelocity())
         end
     end
