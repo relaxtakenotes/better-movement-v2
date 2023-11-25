@@ -10,6 +10,9 @@ hook.Add("PopulateToolMenu", "bm_settings_populate", function()
         panel:CheckBox("Force Slow Footsteps", bm_vars.slow_footsteps:GetName())
         panel:ControlHelp("Pretty experimental. Expect issues. Restart the game if changed!")
 
+        panel:CheckBox("Anim-Based Footsteps", bm_vars.animevent_footsteps:GetName())
+        panel:ControlHelp("Pretty experimental. Expect issues. Enable it together with slow foosteps.")
+
         panel:NumSlider("Interp Mult", bm_vars.interpolation_multiplier:GetName(), 0, 5, 2)
         panel:NumSlider("Interp Type", bm_vars.interpolation_type:GetName(), 0, 1, 0)
     end)
