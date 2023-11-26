@@ -40,11 +40,16 @@ bm_vars = {
     inside_checks_period = CreateConVar("sv_bm_inside_checks_period", 1, flags, "Inside Checks Time Period"),
     slow_footsteps = CreateConVar("sv_bm_slow_footsteps", 0, flags, "Force Slow Footsteps Toggle"),
     animevent_footsteps = CreateConVar("sv_bm_animevent_footsteps", 0, flags, "Animation Based Footsteps Toggle"),
+    animevent_footsteps_type = CreateConVar("sv_bm_animevent_footsteps_type", 0, flags, "0 - regular traces, 1 - util.IsOBBIntersectingOBB"),
+    animevent_footsteps_offset = CreateConVar("sv_bm_animevent_footsteps_offset", 8, flags, "Foot offset if the type is 1"),
 }
 
 local SINGLEPLAYER = game.SinglePlayer()
 local FANCY_INTERPOLATION = 0
 local LINEAR_INTERPOLATION = 1
+
+local ANIMEVENT_TRACE = 0
+local ANIMEVENT_INTERSECT = 1
 
 local function traceable_to_sky(pos, offset)
     local tr = util.TraceLine({start=pos + offset, endpos=pos + Vector(offset.x, offset.y, 100000000), mask=MASK_NPCWORLDSTATIC})
@@ -633,21 +638,6 @@ hook.Add("Think", "bm_footstep_think", function()
     end
 end)
 
-hook.Add("OnPlayerHitGround", "bm_fix_weirdness", function(ply, inwater, onfloater, speed) 
-    local fmaxspeed = math.abs(ply:GetVelocity().z)
-    local exp = bm_vars.steptime.exponent:GetFloat()
-    local mult = bm_vars.steptime.multiplier:GetFloat()
-    local offset = bm_vars.steptime.offset:GetFloat()
-    local fsteptime = (fmaxspeed^exp/fmaxspeed)*mult + offset
-    
-    if not fsteptime then fsteptime = 100 end
-    if fsteptime != fsteptime then fsteptime = 100 end
-
-    fsteptime = math.Clamp(fsteptime, bm_vars.steptime.min:GetFloat(), bm_vars.steptime.max:GetFloat())
-
-    ply.m_flStepSoundTime = (ply.m_flStepSoundTime or 0) + fsteptime
-end)
-
 if not game.SinglePlayer() and CLIENT then
     net.Receive("bm_footstep", function(len)
         local ply = net.ReadEntity()
@@ -673,28 +663,28 @@ local feet = {
     "ValveBiped.Bip01_R_Foot"
 }
 
-hook.Add("Think", "bm_detect_step", function()
-    if not bm_vars.enabled:GetBool() or not bm_vars.animevent_footsteps:GetBool() or not bm_vars.slow_footsteps:GetBool() then return end
-
-    for i, ply in ipairs(player.GetAll()) do
-        if CLIENT then
-            if ply != LocalPlayer() then continue end
-        end
-
+local function UpdateStepSoundAnim(ply)
+    for i, name in ipairs(feet) do
         local player_origin = ply:GetPos()
+
+        local side = i == 1 and "left" or "right"
+
+        local bone = ply:LookupBone(name)
+
+        if not bone then continue end
+
+        local matrix = ply:GetBoneMatrix(bone)
+
+        if not matrix then continue end
+
+        local foot_origin = matrix:GetTranslation()
+
+        local maxs = Vector(2, 2, 2)
+        local mins = maxs * -1
         
-        for i, name in ipairs(feet) do
-            local side = i == 1 and "left" or "right"
+        local hit = false
 
-            local bone = ply:LookupBone(name)
-
-            if not bone then continue end
-
-            local origin = ply:GetBonePosition(bone)
-
-            local maxs = Vector(2, 2, 2)
-            local mins = maxs * -1
-
+        if bm_vars.animevent_footsteps_type:GetInt() == ANIMEVENT_TRACE then
             local distance_tr = util.TraceLine({
                 start = player_origin,
                 endpos = player_origin - vector_up * 8,
@@ -703,45 +693,88 @@ hook.Add("Think", "bm_detect_step", function()
                 collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT                
             }) 
 
-            //print(distance_tr.StartPos:Distance(distance_tr.HitPos))
-            
             local tr = util.TraceHull({
-                start = origin,
-                endpos = origin - vector_up * 4 - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos),
+                start = foot_origin,
+                endpos = foot_origin - vector_up * 4 - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos),
                 maxs = maxs,
                 mins = mins,
                 filter = ply,
                 mask = MASK_PLAYERSOLID,
                 collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
             })
+
+            hit = tr.Hit
+        elseif bm_vars.animevent_footsteps_type:GetInt() == ANIMEVENT_INTERSECT then
+            foot_origin.z = foot_origin.z - bm_vars.animevent_footsteps_offset:GetFloat()
             
-            //local color = Color(255, 255, 0, 255)
-            //if SERVER then
-            //    color.b = 255
-            //    color.r = 0
-            //end
-            //debugoverlay.SweptBox(tr.StartPos, tr.HitPos, maxs, mins, Angle(), FrameTime() * 2, color)
-            //debugoverlay.Text(origin, side, FrameTime() * 2, false)
+            local intersection = util.IsOBBIntersectingOBB(foot_origin, angle_zero, maxs, mins, player_origin, angle_zero, Vector(-100, -100, -100), Vector(100, 100, 0), 0)
+    
+            //print(intersection, CurTime())
+    //
+            //debugoverlay.Box(player_origin, Vector(100, 100, 0), Vector(-100, -100, -100), FrameTime() * 2, Color(255, 0, 0, 10))
+            //debugoverlay.Box(foot_origin, maxs, mins, FrameTime() * 2, Color(255, 0, 0, 10))
+            
+            hit = intersection
+        end
 
-            if not ply.bmsteps then
-                ply.bmsteps = {}
-            end
 
-            if not ply.bmstepsdelay then
-                ply.bmstepsdelay = {} 
-            end
+        if foot_origin.z - player_origin.z > 7.5 then
+            hit = false
+        end
 
-            ply.bmstepsdelay[side] = math.max((ply.bmstepsdelay[side] or 0) - FrameTime(), 0)
 
-            if tr.Hit and not ply.bmsteps[side] and ply.bmstepsdelay[side] <= 0 then
-                ply.bmsteps[side] = true
-                ply.bmstepsdelay[side] = 0.1
-                UpdateStepSound(ply, GetGroundSurface(ply, true), ply:GetPos(), ply:GetVelocity(), true, i - 1)
-            end
+        if not ply.bmsteps then
+            ply.bmsteps = {}
+        end
 
-            if not tr.Hit then
-                ply.bmsteps[side] = false
-            end
+        if not ply.bmstepsdelay then
+            ply.bmstepsdelay = {} 
+        end
+
+        ply.bmstepsdelay[side] = math.max((ply.bmstepsdelay[side] or 0) - FrameTime(), 0)
+
+        if hit and not ply.bmsteps[side] and ply.bmstepsdelay[side] <= 0 then
+            ply.bmsteps[side] = true
+            ply.bmstepsdelay[side] = 0.1
+            UpdateStepSound(ply, GetGroundSurface(ply, true), ply:GetPos(), ply:GetVelocity(), true, i - 1)
+        end
+
+        if not hit then
+            ply.bmsteps[side] = false
         end
     end
+end
+
+hook.Add("Think", "bm_detect_step_anim", function()
+    if not bm_vars.enabled:GetBool() or not bm_vars.animevent_footsteps:GetBool() or not bm_vars.slow_footsteps:GetBool() then return end
+
+    if not game.SinglePlayer() and CLIENT then
+        local lp = LocalPlayer()
+        if not IsValid(lp) then return end
+
+        lp:SetupBones() // do we really need to do this?
+        
+        UpdateStepSoundAnim(lp)
+    end
+
+    if SERVER then
+        for i, ply in ipairs(player.GetAll()) do 
+            UpdateStepSoundAnim(ply)
+        end
+    end
+end)
+
+hook.Add("OnPlayerHitGround", "bm_fix_weirdness", function(ply, inwater, onfloater, speed) 
+    local fmaxspeed = math.abs(ply:GetVelocity().z)
+    local exp = bm_vars.steptime.exponent:GetFloat()
+    local mult = bm_vars.steptime.multiplier:GetFloat()
+    local offset = bm_vars.steptime.offset:GetFloat()
+    local fsteptime = (fmaxspeed^exp/fmaxspeed)*mult + offset
+    
+    if not fsteptime then fsteptime = 100 end
+    if fsteptime != fsteptime then fsteptime = 100 end
+
+    fsteptime = math.Clamp(fsteptime, bm_vars.steptime.min:GetFloat(), bm_vars.steptime.max:GetFloat())
+
+    ply.m_flStepSoundTime = (ply.m_flStepSoundTime or 0) + fsteptime
 end)
