@@ -743,7 +743,8 @@ local function UpdateStepSoundAnim(ply)
             
             local intersection = util.IsOBBIntersectingOBB(foot_origin, angle_zero, maxs, mins, player_origin, angle_zero, Vector(-100, -100, -100), Vector(100, 100, 0), 0)
     
-    //
+            debugoverlay.Box(player_origin, Vector(100, 100, 0), Vector(-100, -100, -100), FrameTime() * 2, Color(255, 0, 0, 10))
+            debugoverlay.Box(foot_origin, maxs, mins, FrameTime() * 2, Color(255, 0, 0, 10))
             
             hit = intersection
         end
@@ -783,7 +784,7 @@ hook.Add("Think", "bm_detect_step_anim", function()
         local lp = LocalPlayer()
         if not IsValid(lp) then return end
 
-        lp:SetupBones() // do we really need to do this?
+        //lp:SetupBones() // do we really need to do this?
         
         UpdateStepSoundAnim(lp)
     end
