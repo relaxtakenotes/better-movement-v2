@@ -15,6 +15,8 @@ hook.Add("PopulateToolMenu", "bm_settings_populate", function()
 
         panel:NumSlider("Interp Mult", bm_vars.interpolation_multiplier:GetName(), 0, 5, 2)
         panel:NumSlider("Interp Type", bm_vars.interpolation_type:GetName(), 0, 1, 0)
+
+        panel:CheckBox("Remove Speed Hooks", bm_vars.remove_weapon_hooks:GetName())
     end)
 
     spawnmenu.AddToolMenuOption("Options", "bm_8841_tool", "bm_8841_speed", "Speed", nil, nil, function(panel)
@@ -27,6 +29,7 @@ hook.Add("PopulateToolMenu", "bm_settings_populate", function()
         panel:NumSlider("Crouched Mult", bm_vars.speed.crouch:GetName(), 0, 1, 2)
         panel:NumSlider("Duck", bm_vars.speed.duck:GetName(), 0, 1, 2)
         panel:NumSlider("Unduck", bm_vars.speed.unduck:GetName(), 0, 1, 2)
+        panel:NumSlider("Ladder", bm_vars.speed.ladder:GetName(), 0, 1000, 0)
     end)
 
     spawnmenu.AddToolMenuOption("Options", "bm_8841_tool", "bm_8841_slowdown", "Slowdown", nil, nil, function(panel)

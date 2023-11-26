@@ -11,7 +11,8 @@ bm_vars = {
         inside_multiplier = CreateConVar("sv_bm_speed_inside_multiplier", 0.8, flags, "Inside Speed Multiplier"),
         crouch = CreateConVar("sv_bm_speed_crouched", 0.5, flags, "Crouched Speed Multiplier"),
         duck = CreateConVar("sv_bm_speed_duck", 0.3, flags, "Duck Speed"),
-        unduck = CreateConVar("sv_bm_speed_unduck", 0.3, flags, "Unduck Speed")
+        unduck = CreateConVar("sv_bm_speed_unduck", 0.3, flags, "Unduck Speed"),
+        ladder = CreateConVar("sv_bm_speed_ladder", 100, flags, "Ladder Speed"),
     },
     slowdown = {
         angle_enabled = CreateConVar("sv_bm_angle_slowdown", 1, flags, "Slope Slowdown Toggle"),
@@ -42,6 +43,7 @@ bm_vars = {
     animevent_footsteps = CreateConVar("sv_bm_animevent_footsteps", 0, flags, "Animation Based Footsteps Toggle"),
     animevent_footsteps_type = CreateConVar("sv_bm_animevent_footsteps_type", 1, flags, "0 - regular traces, 1 - obb interesction test against player origin (basically works better on slopes)"),
     animevent_footsteps_offset = CreateConVar("sv_bm_animevent_footsteps_offset", 8, flags, "Foot offset if the type is 1"),
+    remove_weapon_hooks = CreateConVar("sv_bm_remove_weapon_hooks", 0, flags, "Remove weapon hooks that affect your speed."),
 }
 
 local SINGLEPLAYER = game.SinglePlayer()
@@ -313,6 +315,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     ply:SetWalkSpeed(bm_vars.speed.walk:GetFloat() * _bmfraction)
     ply:SetRunSpeed(bm_vars.speed.run:GetFloat() * _bmfraction)
     ply:SetSlowWalkSpeed(bm_vars.speed.slowwalk:GetFloat() * _bmfraction)
+    ply:SetLadderClimbSpeed(bm_vars.speed.ladder:GetFloat())
     
     if ply:GetMoveType() == MOVETYPE_WALK then
         mv:SetForwardSpeed(_forward)
@@ -573,6 +576,8 @@ local function UpdateStepSound(ply, psurface, vecOrigin, vecVelocity, isAnimEven
 
     if movetype == MOVETYPE_NOCLIP or movetype == MOVETYPE_OBSERVER then return end
 
+    if ply:InVehicle() then return end
+
     if not sv_footsteps:GetBool() then return end
 
     speed = vecVelocity:Length()
@@ -698,6 +703,11 @@ local feet = {
 }
 
 local function UpdateStepSoundAnim(ply)
+    if ply:GetMoveType() == MOVETYPE_LADDER then
+        UpdateStepSound(ply, GetGroundSurface(ply, true), ply:GetPos(), ply:GetVelocity())
+        return
+    end
+    
     for i, name in ipairs(feet) do
         local player_origin = ply:GetPos()
 
@@ -749,11 +759,9 @@ local function UpdateStepSoundAnim(ply)
             hit = intersection
         end
 
-
         if foot_origin.z - player_origin.z > 7.5 then
             hit = false
         end
-
 
         if not ply.bmsteps then
             ply.bmsteps = {}
@@ -768,6 +776,7 @@ local function UpdateStepSoundAnim(ply)
         if hit and not ply.bmsteps[side] and ply.bmstepsdelay[side] <= 0 then
             ply.bmsteps[side] = true
             ply.bmstepsdelay[side] = 0.1
+
             UpdateStepSound(ply, GetGroundSurface(ply, true), ply:GetPos(), ply:GetVelocity(), true, i - 1)
         end
 
@@ -809,4 +818,15 @@ hook.Add("OnPlayerHitGround", "bm_fix_weirdness", function(ply, inwater, onfloat
     fsteptime = math.Clamp(fsteptime, bm_vars.steptime.min:GetFloat(), bm_vars.steptime.max:GetFloat())
 
     ply.m_flStepSoundTime = (ply.m_flStepSoundTime or 0) + fsteptime
+end)
+
+timer.Simple(5, function() 
+    hook.Add("Think", "bm_remove_setupmove", function() 
+        if not bm_vars.remove_weapon_hooks:GetBool() or not bm_vars.enabled:GetBool() then return end
+        hook.Remove("SetupMove", "ArcCW_SetupMove")
+        hook.Remove("SetupMove", "tfa_setupmove")
+        hook.Remove("SetupMove", "ArcticTacRP.SetupMove")
+        hook.Remove("SetupMove", "ARC9.SetupMove")
+        hook.Remove("Think", "bm_remove_setupmove")
+    end)
 end)
