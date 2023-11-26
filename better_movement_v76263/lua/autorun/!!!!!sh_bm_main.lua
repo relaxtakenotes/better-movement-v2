@@ -40,7 +40,7 @@ bm_vars = {
     inside_checks_period = CreateConVar("sv_bm_inside_checks_period", 1, flags, "Inside Checks Time Period"),
     slow_footsteps = CreateConVar("sv_bm_slow_footsteps", 0, flags, "Force Slow Footsteps Toggle"),
     animevent_footsteps = CreateConVar("sv_bm_animevent_footsteps", 0, flags, "Animation Based Footsteps Toggle"),
-    animevent_footsteps_type = CreateConVar("sv_bm_animevent_footsteps_type", 0, flags, "0 - regular traces, 1 - util.IsOBBIntersectingOBB"),
+    animevent_footsteps_type = CreateConVar("sv_bm_animevent_footsteps_type", 1, flags, "0 - regular traces, 1 - obb interesction test against player origin (basically works better on slopes)"),
     animevent_footsteps_offset = CreateConVar("sv_bm_animevent_footsteps_offset", 8, flags, "Foot offset if the type is 1"),
 }
 
@@ -425,6 +425,32 @@ local function GetStepSoundTime(ply, iType, bWalking)
     return fsteptime
 end
 
+local material_types = {
+	[65] = "ANTLION",
+	[66] = "BLOODYFLESH",
+	[67] = "CONCRETE",
+	[68] = "DIRT",
+	[69] = "EGGSHELL",
+	[70] = "FLESH",
+	[71] = "GRATE",
+	[72] = "ALIENFLESH",
+	[73] = "CLIP",
+	[74] = "SNOW",
+	[76] = "PLASTIC",
+	[77] = "METAL",
+	[78] = "SAND",
+	[79] = "FOLIAGE",
+	[80] = "COMPUTER",
+	[83] = "SLOSH",
+	[84] = "TILE",
+	[85] = "GRASS",
+	[86] = "VENT",
+	[87] = "WOOD",
+	[88] = "DEFAULT",
+	[89] = "GLASS",
+	[90] = "WARPSHIELD"
+}
+
 local function GetGroundSurface(ply, isAnimEvent)
     local vecOrigin = ply:GetPos()
 
@@ -458,6 +484,14 @@ local function GetGroundSurface(ply, isAnimEvent)
 
     if tr.Fraction >= 1 then
         return nil
+    end
+
+    if tr.SurfaceProps == -1 then
+        local typee = material_types[tr.MatType]
+        
+        if not typee then return nil end
+
+        return util.GetSurfaceData(util.GetSurfaceIndex(string.lower(typee)))
     end
 
     return util.GetSurfaceData(tr.SurfaceProps)
@@ -709,10 +743,7 @@ local function UpdateStepSoundAnim(ply)
             
             local intersection = util.IsOBBIntersectingOBB(foot_origin, angle_zero, maxs, mins, player_origin, angle_zero, Vector(-100, -100, -100), Vector(100, 100, 0), 0)
     
-            //print(intersection, CurTime())
     //
-            //debugoverlay.Box(player_origin, Vector(100, 100, 0), Vector(-100, -100, -100), FrameTime() * 2, Color(255, 0, 0, 10))
-            //debugoverlay.Box(foot_origin, maxs, mins, FrameTime() * 2, Color(255, 0, 0, 10))
             
             hit = intersection
         end
