@@ -94,7 +94,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     if not bm_vars.enabled:GetBool() then return end
 
     local maxspeed = ply:GetMaxSpeed()
-    
+
     local forwardmove = cmd:GetForwardMove() / 10000 * maxspeed
     local sidemove = cmd:GetSideMove() / 10000 * maxspeed
     
@@ -105,7 +105,6 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
             forwardmove = forwardmove * 0.75 * nf_mult
             maxspeed = math.abs(forwardmove)
         end
-
     end
 
     local origin = mv:GetOrigin()
@@ -223,7 +222,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
         ply:SetNW2Var("env_check_timeout", math.max(ply:GetNW2Var("env_check_timeout", 0) - FrameTime(), 0))
 
         if ply:GetNW2Var("env_check_timeout", 0) <= 0 and mv:GetVelocity():Length() > 0 then
-            if get_env_state(mv:GetOrigin() + Vector(0,0,40)) == "indoors" then
+            if get_env_state(mv:GetOrigin() + vector_up * 40) == "indoors" then
                 ply:SetNW2Var("env_is_inside", true)
             else
                 ply:SetNW2Var("env_is_inside", false)
@@ -793,7 +792,7 @@ hook.Add("Think", "bm_detect_step_anim", function()
         local lp = LocalPlayer()
         if not IsValid(lp) then return end
 
-        //lp:SetupBones() // do we really need to do this?
+        lp:SetupBones()
         
         UpdateStepSoundAnim(lp)
     end
