@@ -17,6 +17,7 @@ hook.Add("PopulateToolMenu", "bm_settings_populate", function()
         panel:NumSlider("Interp Type", bm_vars.interpolation_type:GetName(), 0, 1, 0)
 
         panel:CheckBox("Remove Speed Hooks", bm_vars.remove_weapon_hooks:GetName())
+        panel:CheckBox("Controller Support", bm_vars.controller_support:GetName())
     end)
 
     spawnmenu.AddToolMenuOption("Options", "bm_8841_tool", "bm_8841_speed", "Speed", nil, nil, function(panel)

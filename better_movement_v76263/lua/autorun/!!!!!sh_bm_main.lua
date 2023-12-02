@@ -44,6 +44,7 @@ bm_vars = {
     animevent_footsteps_type = CreateConVar("sv_bm_animevent_footsteps_type", 1, flags, "0 - regular traces, 1 - obb interesction test against player origin (basically works better on slopes)"),
     animevent_footsteps_offset = CreateConVar("sv_bm_animevent_footsteps_offset", 8, flags, "Foot offset if the type is 1"),
     remove_weapon_hooks = CreateConVar("sv_bm_remove_weapon_hooks", 0, flags, "Remove weapon hooks that affect your speed."),
+    controller_support = CreateConVar("sv_bm_controller_support", 0, flags, "Controller support. Breaks some mods."),
 }
 
 local SINGLEPLAYER = game.SinglePlayer()
@@ -95,15 +96,25 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     local maxspeed = ply:GetMaxSpeed()
 
-    local forwardmove = cmd:GetForwardMove() / 10000 * maxspeed
-    local sidemove = cmd:GetSideMove() / 10000 * maxspeed
+    local forwardmove = cmd:GetForwardMove()
+    local sidemove = cmd:GetSideMove()
+
+    if bm_vars.controller_support:GetBool() then
+        forwardmove = forwardmove / 10000 * maxspeed
+        sidemove = sidemove / 10000 * maxspeed
+    else
+        forwardmove = math.Clamp(forwardmove, -maxspeed, maxspeed)
+        sidemove = math.Clamp(sidemove, -maxspeed, maxspeed)
+    end
     
     if bm_vars.slowdown.non_forward:GetBool() then
         local nf_mult = bm_vars.slowdown.non_forward_multiplier:GetFloat()
+
         sidemove = sidemove * 0.75 * nf_mult
+
         if forwardmove < 0 then 
             forwardmove = forwardmove * 0.75 * nf_mult
-            maxspeed = math.abs(forwardmove)
+            maxspeed = maxspeed * 0.75 * nf_mult
         end
     end
 
@@ -277,7 +288,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     // lerp everything
     local mult = bm_vars.interpolation_multiplier:GetFloat()
-    local more_slowdown = ply:GetNW2Var("mouse_slowdown", 0) * ply:GetNW2Var("slowdown_on_hit", 1)
+    local more_slowdown = ply:GetNW2Var("mouse_slowdown", 1) * ply:GetNW2Var("slowdown_on_hit", 1)
 
     maxspeed = maxspeed * more_slowdown
 
@@ -339,6 +350,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     ply:SetDuckSpeed(bm_vars.speed.duck:GetFloat())
     ply:SetUnDuckSpeed(bm_vars.speed.unduck:GetFloat())
 end)
+
 
 hook.Add("OnPlayerHitGround", "bm_playerhitground", function(ply, in_water, on_floater, speed) 
     if not bm_vars.enabled:GetBool() then return end
