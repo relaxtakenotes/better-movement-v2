@@ -332,6 +332,8 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
         mv:SetSideSpeed(_side)
         cmd:SetForwardMove(_forward)
         cmd:SetSideMove(_side)
+        mv:SetMaxSpeed(maxspeed_raw)
+        mv:SetMaxClientSpeed(maxspeed_raw)
     end
     
     // reduce air velocity to prevent bhopping
