@@ -763,15 +763,15 @@ local function UpdateStepSoundAnim(ply)
         
         local hit = false
 
-        local distance_tr = util.TraceLine({
-            start = player_origin,
-            endpos = player_origin - vector_up * 8,
-            filter = ply,
-            mask = MASK_PLAYERSOLID,
-            collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT                
-        })
-        
         if bm_vars.animevent_footsteps_type:GetInt() == ANIMEVENT_TRACE then
+            local distance_tr = util.TraceLine({
+                start = player_origin,
+                endpos = player_origin - vector_up * 8,
+                filter = ply,
+                mask = MASK_PLAYERSOLID,
+                collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT                
+            })
+            
             local tr = util.TraceHull({
                 start = foot_origin,
                 endpos = foot_origin - vector_up * 4 - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos),
@@ -786,9 +786,9 @@ local function UpdateStepSoundAnim(ply)
         elseif bm_vars.animevent_footsteps_type:GetInt() == ANIMEVENT_INTERSECT then
             foot_origin.z = foot_origin.z - bm_vars.animevent_footsteps_offset:GetFloat()
             
-            local intersection = util.IsOBBIntersectingOBB(foot_origin, foot_angle, foot_mins, foot_maxs, player_origin - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos), angle_zero, Vector(-100, -100, -100), Vector(100, 100, 0), 0)
+            local intersection = util.IsOBBIntersectingOBB(foot_origin, foot_angle, foot_mins, foot_maxs, player_origin, angle_zero, Vector(-100, -100, -100), Vector(100, 100, 0), 0)
     
-            debugoverlay.Box(player_origin - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos), Vector(100, 100, 0), Vector(-100, -100, -100), FrameTime() * 2, Color(255, 0, 0, 10))
+            debugoverlay.Box(player_origin, Vector(100, 100, 0), Vector(-100, -100, -100), FrameTime() * 2, Color(255, 0, 0, 10))
             debugoverlay.SweptBox(foot_origin, foot_origin, foot_mins, foot_maxs, foot_angle, FrameTime() * 2, Color(255, 0, 0, 10))
 
             //debugoverlay.Text(foot_origin, tostring(intersection), FrameTime() * 2, false)
