@@ -42,7 +42,8 @@ bm_vars = {
     slow_footsteps = CreateConVar("sv_bm_slow_footsteps", 0, flags, "Force Slow Footsteps Toggle"),
     animevent_footsteps = CreateConVar("sv_bm_animevent_footsteps", 0, flags, "Animation Based Footsteps Toggle"),
     animevent_footsteps_type = CreateConVar("sv_bm_animevent_footsteps_type", 1, flags, "0 - regular traces, 1 - obb interesction test against player origin (basically works better on slopes)"),
-    animevent_footsteps_offset = CreateConVar("sv_bm_animevent_footsteps_offset", 8, flags, "Foot offset if the type is 1"),
+    animevent_footsteps_offset = CreateConVar("sv_bm_animevent_footsteps_offset", -1, flags, "Foot offset if the type is 1"),
+    animevent_bbox_scale = CreateConVar("sv_bm_animevent_footsteps_bbox_scale", 1, flags, "Scale for the BBOX that gets tested if the type is 1."),
     remove_weapon_hooks = CreateConVar("sv_bm_remove_weapon_hooks", 0, flags, "Remove weapon hooks that affect your speed."),
     controller_support = CreateConVar("sv_bm_controller_support", 0, flags, "Controller support. Breaks some mods."),
 }
@@ -715,6 +716,8 @@ local feet = {
     "ValveBiped.Bip01_R_Foot"
 }
 
+local hitbox_cache = {}
+
 local function UpdateStepSoundAnim(ply)
     if ply:GetMoveType() == MOVETYPE_LADDER then
         UpdateStepSound(ply, GetGroundSurface(ply, true), ply:GetPos(), ply:GetVelocity())
@@ -735,26 +738,45 @@ local function UpdateStepSoundAnim(ply)
         if not matrix then continue end
 
         local foot_origin = matrix:GetTranslation()
+        local foot_angle = Angle(90, 0, 0)
+        local foot_maxs = Vector(2, 2, 2)
+        local foot_mins = Vector(-2, -2, -2)
 
-        local maxs = Vector(2, 2, 2)
-        local mins = maxs * -1
+        if not hitbox_cache[bone] then
+            hitbox_cache[bone] = util.TraceHull({
+                start = foot_origin,
+                endpos = foot_origin,
+                maxs = foot_maxs,
+                mins = foot_mins,
+                ignoreworld = true
+            }).HitBox
+        end
+
+        local hitbox = hitbox_cache[bone]
+
+        if not hitbox then continue end
+
+        foot_mins, foot_maxs = ply:GetHitBoxBounds(hitbox, 0)
+
+        foot_mins = foot_mins * 0.8 * bm_vars.animevent_bbox_scale:GetFloat()
+        foot_maxs = foot_maxs * 0.8 * bm_vars.animevent_bbox_scale:GetFloat()
         
         local hit = false
 
+        local distance_tr = util.TraceLine({
+            start = player_origin,
+            endpos = player_origin - vector_up * 8,
+            filter = ply,
+            mask = MASK_PLAYERSOLID,
+            collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT                
+        })
+        
         if bm_vars.animevent_footsteps_type:GetInt() == ANIMEVENT_TRACE then
-            local distance_tr = util.TraceLine({
-                start = player_origin,
-                endpos = player_origin - vector_up * 8,
-                filter = ply,
-                mask = MASK_PLAYERSOLID,
-                collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT                
-            }) 
-
             local tr = util.TraceHull({
                 start = foot_origin,
                 endpos = foot_origin - vector_up * 4 - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos),
-                maxs = maxs,
-                mins = mins,
+                maxs = foot_maxs,
+                mins = foot_mins,
                 filter = ply,
                 mask = MASK_PLAYERSOLID,
                 collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
@@ -764,16 +786,15 @@ local function UpdateStepSoundAnim(ply)
         elseif bm_vars.animevent_footsteps_type:GetInt() == ANIMEVENT_INTERSECT then
             foot_origin.z = foot_origin.z - bm_vars.animevent_footsteps_offset:GetFloat()
             
-            local intersection = util.IsOBBIntersectingOBB(foot_origin, angle_zero, maxs, mins, player_origin, angle_zero, Vector(-100, -100, -100), Vector(100, 100, 0), 0)
+            local intersection = util.IsOBBIntersectingOBB(foot_origin, foot_angle, foot_mins, foot_maxs, player_origin - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos), angle_zero, Vector(-100, -100, -100), Vector(100, 100, 0), 0)
     
-            debugoverlay.Box(player_origin, Vector(100, 100, 0), Vector(-100, -100, -100), FrameTime() * 2, Color(255, 0, 0, 10))
-            debugoverlay.Box(foot_origin, maxs, mins, FrameTime() * 2, Color(255, 0, 0, 10))
+            debugoverlay.Box(player_origin - vector_up * distance_tr.StartPos:Distance(distance_tr.HitPos), Vector(100, 100, 0), Vector(-100, -100, -100), FrameTime() * 2, Color(255, 0, 0, 10))
+            debugoverlay.SweptBox(foot_origin, foot_origin, foot_mins, foot_maxs, foot_angle, FrameTime() * 2, Color(255, 0, 0, 10))
+
+            //debugoverlay.Text(foot_origin, tostring(intersection), FrameTime() * 2, false)
+            debugoverlay.Text(foot_origin, tostring(foot_angle), FrameTime() * 2, false)
             
             hit = intersection
-        end
-
-        if foot_origin.z - player_origin.z > 7.5 then
-            hit = false
         end
 
         if not ply.bmsteps then
