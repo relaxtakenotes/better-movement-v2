@@ -278,8 +278,6 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
         forwardmove = forwardmove * cw_thing
         sidemove = sidemove * cw_thing
         maxspeed = maxspeed * cw_thing
-
-        print(cw_thing)
     end
 
     // handle slowdown on landing
