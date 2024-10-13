@@ -1,9 +1,9 @@
 {
-	"title": "Better Movement V2",
-	"type": "effects",
-	"tags": 
-	[
-		"roleplay",
-		"realism"
-	]
+  "title": "Better Movement V2",
+  "type": "effects",
+  "tags": [
+    "roleplay",
+    "realism"
+  ],
+  "ignore": []
 }
