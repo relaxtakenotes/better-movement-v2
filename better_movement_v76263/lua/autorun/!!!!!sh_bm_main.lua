@@ -59,146 +59,44 @@ local ANIMEVENT_INTERSECT = 1
 
 local player_meta = FindMetaTable("Player")
 
-function player_meta:get_mouse_slowdown()
-    return self:GetNW2Var("mouse_slowdown", 0)
-end
-function player_meta:set_mouse_slowdown(val)
-    return self:SetNW2Var("mouse_slowdown", val)
-end
-
-function player_meta:get_previous_origin()
-    return self:GetNW2Var("previous_origin", vector_origin)
-end
-function player_meta:set_previous_origin(val)
-    return self:SetNW2Var("previous_origin", val)
-end
-
-function player_meta:get_current_origin()
-    return self:GetNW2Var("current_origin", vector_origin)
-end
-function player_meta:set_current_origin(val)
-    return self:SetNW2Var("current_origin", val)
-end
-
-function player_meta:get_weakness()
-    return self:GetNW2Var("weakness", 0)
-end
-function player_meta:set_weakness(val)
-    return self:SetNW2Var("weakness", val)
-end
-
-function player_meta:get_slowdown_on_hit()
-    return self:GetNW2Var("slowdown_on_hit", 1)
-end
-function player_meta:set_slowdown_on_hit(val)
-    return self:SetNW2Var("slowdown_on_hit", val)
-end
-
-function player_meta:get_in_speed_time()
-    return self:GetNW2Var("in_speed_time", 0)
-end
-function player_meta:set_in_speed_time(val)
-    return self:SetNW2Var("in_speed_time", val)
-end
-
-function player_meta:get_in_speed_count()
-    return self:GetNW2Var("in_speed_count", 0)
-end
-function player_meta:set_in_speed_count(val)
-    return self:SetNW2Var("in_speed_count", val)
-end
-
-function player_meta:get_in_boosted_run()
-    return self:GetNW2Var("in_boosted_run", false)
-end
-function player_meta:set_in_boosted_run(val)
-    return self:SetNW2Var("in_boosted_run", val)
-end
-
-function player_meta:get_env_check_timeout()
-    return self:GetNW2Var("env_check_timeout", 0)
-end
-function player_meta:set_env_check_timeout(val)
-    return self:SetNW2Var("env_check_timeout", val)
-end
-
-function player_meta:get_env_is_inside()
-    return self:GetNW2Var("env_is_inside", false)
-end
-function player_meta:set_env_is_inside(val)
-    return self:SetNW2Var("env_is_inside", val)
-end
-
-function player_meta:get_env_slowdown()
-    return self:GetNW2Var("env_slowdown", 1)
-end
-function player_meta:set_env_slowdown(val)
-    return self:SetNW2Var("env_slowdown", val)
-end
-
-function player_meta:get_mouse_slowdown()
-    return self:GetNW2Var("mouse_slowdown", 1)
-end
-function player_meta:set_mouse_slowdown(val)
-    return self:SetNW2Var("mouse_slowdown", val)
-end
-
-function player_meta:get_lerped_forwardmove()
-    return self:GetNW2Var("lerped_forwardmove", 0)
-end
-function player_meta:set_lerped_forwardmove(val)
-    return self:SetNW2Var("lerped_forwardmove", val)
-end
-
-function player_meta:get_lerped_sidemove()
-    return self:GetNW2Var("lerped_sidemove", 0)
-end
-function player_meta:set_lerped_sidemove(val)
-    return self:SetNW2Var("lerped_sidemove", val)
-end
-
-function player_meta:get_new_maxspeed()
-    return self:GetNW2Var("new_maxspeed", 0)
-end
-function player_meta:set_new_maxspeed(val)
-    return self:SetNW2Var("new_maxspeed", val)
-end
-
-function player_meta:get_bmfraction()
-    return self:GetNW2Var("bmfraction", 1)
-end
-function player_meta:set_bmfraction(val)
-    return self:SetNW2Var("bmfraction", val)
-end
-
-function player_meta:get_bm_was_on_ground()
-    return self:GetNW2Var("bm_was_on_ground", true)
-end
-function player_meta:set_bm_was_on_ground(val)
-    return self:SetNW2Var("bm_was_on_ground", val)
-end
-
-function player_meta:get_bm_on_ground()
-    return self:GetNW2Var("bm_on_ground", true)
-end
-function player_meta:set_bm_on_ground(val)
-    return self:SetNW2Var("bm_on_ground", val)
-end
+AccessorFunc(player_meta, "bm_mouse_slowdown", "BmMouseSlowdown", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_previous_origin", "BmPreviousOrigin", FORCE_VECTOR)
+AccessorFunc(player_meta, "bm_current_origin", "BmCurrentOrigin", FORCE_VECTOR)
+AccessorFunc(player_meta, "bm_weakness", "BmWeakness", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_slowdown_on_hit", "BmSlowdownOnHit", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_in_speed_time", "BmInSpeedTime", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_in_speed_count", "BmInSpeedCount", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_in_boosted_run", "BmInBoostedRun", FORCE_BOOL)
+AccessorFunc(player_meta, "bm_env_check_timeout", "BmEnvCheckTimeout", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_env_is_inside", "BmEnvIsInside", FORCE_BOOL)
+AccessorFunc(player_meta, "bm_env_slowdown", "BmEnvSlowdown", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_lerped_forwardmove", "BmLerpedForwardMove", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_lerped_sidemove", "BmLerpedSideMove", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_new_maxspeed", "BmNewMaxSpeed", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_fraction", "BmFraction", FORCE_NUMBER)
+AccessorFunc(player_meta, "bm_was_on_ground", "BmWasOnGround", FORCE_BOOL)
+AccessorFunc(player_meta, "bm_on_ground", "BmOnGround", FORCE_BOOL)
 
 local function traceable_to_sky(pos, offset)
-    local tr = util.TraceLine({start=pos + offset, endpos=pos + Vector(offset.x, offset.y, 100000000), mask=MASK_NPCWORLDSTATIC})
+    local tr = util.TraceLine({start=pos + offset, endpos=pos + offset + vector_up * 56688, mask=MASK_NPCWORLDSTATIC})
     local temp = util.TraceLine({start=tr.StartPos, endpos=pos, mask=MASK_NPCWORLDSTATIC})
     if temp.HitPos == pos and not temp.StartSolid and tr.HitSky then return true end
     return false
 end
 
+local __v1 = Vector(0,0,0)
+local __v2 = Vector(120,0,0)
+local __v3 = Vector(0,120,0)
+local __v4 = Vector(-120,0,0)
+local __v5 = Vector(0,-120,0)
+
 local function get_env_state(pos)
-    local tr_1 = traceable_to_sky(pos, Vector(0,0,0))
-    local tr_2 = traceable_to_sky(pos, Vector(120,0,0))
-    local tr_3 = traceable_to_sky(pos, Vector(0,120,0))
-    local tr_4 = traceable_to_sky(pos, Vector(-120,0,0))
-    local tr_5 = traceable_to_sky(pos, Vector(0,-120,0))
-    if (tr_1 or tr_2 or tr_3 or tr_4 or tr_5) then return "outdoors" else return "indoors" end
+    local tr_1 = traceable_to_sky(pos, __v1)
+    local tr_2 = traceable_to_sky(pos, __v2)
+    local tr_3 = traceable_to_sky(pos, __v3)
+    local tr_4 = traceable_to_sky(pos, __v4)
+    local tr_5 = traceable_to_sky(pos, __v5)
+    if (tr_1 or tr_2 or tr_3 or tr_4 or tr_5) then return false else return true end
 end
 
 local function arse(ply, start, endd)
@@ -216,9 +114,42 @@ local function arse(ply, start, endd)
         thing = thing
     end
 
-    thing = math.Clamp(thing, 0.4 + ply:get_mouse_slowdown() * 0.3, 1)
+    thing = math.Clamp(thing, 0.4 + ply:GetBmMouseSlowdown() * 0.3, 1)
 
     return math.ease.InOutExpo(thing * 0.75)
+end
+
+local function initialize_bm(ply)
+    ply:SetBmMouseSlowdown(1)
+    ply:SetBmPreviousOrigin(ply:GetPos())
+    ply:SetBmCurrentOrigin(ply:GetPos())
+    ply:SetBmWeakness(0)
+    ply:SetBmSlowdownOnHit(1)
+    ply:SetBmInSpeedTime(0)
+    ply:SetBmInSpeedCount(0)
+    ply:SetBmInBoostedRun(false)
+    ply:SetBmEnvCheckTimeout(0)
+    ply:SetBmEnvIsInside(get_env_state(ply:GetPos() + vector_up * 40))
+    ply:SetBmEnvSlowdown(1)
+    ply:SetBmMouseSlowdown(1)
+    ply:SetBmLerpedForwardMove(0)
+    ply:SetBmLerpedSideMove(0)
+    ply:SetBmNewMaxSpeed(ply:GetMaxSpeed())
+    ply:SetBmWasOnGround(ply:OnGround())
+    ply:SetBmOnGround(ply:OnGround())
+    ply:SetBmFraction(0)
+end
+
+if SERVER then
+    hook.Add("PlayerSpawn", "bm_init", function(ply, transition)
+        initialize_bm(ply)
+    end)
+end
+
+if CLIENT then
+    hook.Add("InitPostEntity", "bm_init", function()
+        initialize_bm(LocalPlayer())
+    end)
 end
 
 hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
@@ -254,12 +185,12 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     // handle weakness
     if bm_vars.slowdown.weakness_enabled:GetBool() then
-        ply:set_previous_origin(ply:get_current_origin())
-        ply:set_current_origin(origin)
+        ply:SetBmPreviousOrigin(ply:GetBmCurrentOrigin())
+        ply:SetBmCurrentOrigin(origin)
 
-        local diff = ply:get_current_origin() - ply:get_previous_origin()
+        local diff = ply:GetBmCurrentOrigin() - ply:GetBmPreviousOrigin()
 
-        local weakness = ply:get_weakness()
+        local weakness = ply:GetBmWeakness()
 
         if diff.z > 0 and onground then
             weakness = weakness + diff.z / 20 * bm_vars.slowdown.weakness_multiplier:GetFloat()
@@ -271,9 +202,9 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
         weakness = math.Clamp(weakness - FrameTime() * 9 * bm_vars.slowdown.weakness_rest_multiplier:GetFloat(), 0, 128)
 
-        ply:set_weakness(weakness)
+        ply:SetBmWeakness(weakness)
 
-        local cw_thing = (1 - ply:get_weakness() / 128 * 0.5)
+        local cw_thing = (1 - ply:GetBmWeakness() / 128 * 0.5)
 
         forwardmove = forwardmove * cw_thing
         sidemove = sidemove * cw_thing
@@ -282,15 +213,15 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     // handle slowdown on landing
     if bm_vars.slowdown.landing:GetBool() then
-        if ply:get_slowdown_on_hit() < 0.999 then
-            ply:set_slowdown_on_hit(
-                Lerp(FrameTime() + math.abs(ply:get_slowdown_on_hit() - 1) * FrameTime() * 50,
-                    ply:get_slowdown_on_hit(),
+        if ply:GetBmSlowdownOnHit() < 0.999 then
+            ply:SetBmSlowdownOnHit(
+                Lerp(FrameTime() + math.abs(ply:GetBmSlowdownOnHit() - 1) * FrameTime() * 50,
+                    ply:GetBmSlowdownOnHit(),
                     1
                 )
             )
         else
-            ply:set_slowdown_on_hit(1)
+            ply:SetBmSlowdownOnHit(1)
         end
     end
 
@@ -346,42 +277,38 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     // handle the "boosted" state
     if mv:KeyPressed(IN_SPEED) then
-        ply:set_in_speed_time(0.3)
-        ply:set_in_speed_count(ply:get_in_speed_count() + 1)
+        ply:SetBmInSpeedTime(0.3)
+        ply:SetBmInSpeedCount(ply:GetBmInSpeedCount() + 1)
     end
 
-    if ply:get_in_speed_count() >= 2 then
-        ply:set_in_boosted_run(true)
+    if ply:GetBmInSpeedCount() >= 2 then
+        ply:SetBmInBoostedRun(true)
     else
-        ply:set_in_boosted_run(false)
+        ply:SetBmInBoostedRun(false)
     end
 
-    if not mv:KeyDown(IN_SPEED) and ply:get_in_speed_time() <= 0 then
-        ply:set_in_speed_count(0)
+    if not mv:KeyDown(IN_SPEED) and ply:GetBmInSpeedTime() <= 0 then
+        ply:SetBmInSpeedCount(0)
     end
 
-    ply:set_in_speed_time(math.max(ply:get_in_speed_time() - FrameTime(), 0))
+    ply:SetBmInSpeedTime(math.max(ply:GetBmInSpeedTime() - FrameTime(), 0))
 
     // handle being inside
     if bm_vars.inside_checks_enabled:GetBool() then
-        ply:set_env_check_timeout(math.max(ply:get_env_check_timeout() - FrameTime(), 0))
+        ply:SetBmEnvCheckTimeout(math.max(ply:GetBmEnvCheckTimeout() - FrameTime(), 0))
 
-        if ply:get_env_check_timeout() <= 0 and mv:GetVelocity():Length() > 0 then
-            if get_env_state(mv:GetOrigin() + vector_up * 40) == "indoors" then
-                ply:set_env_is_inside(true)
-            else
-                ply:set_env_is_inside(false)
-            end
-            ply:set_env_check_timeout(bm_vars.inside_checks_period:GetFloat() + math.random(-0.5, 0.5))
+        if ply:GetBmEnvCheckTimeout() <= 0 and mv:GetVelocity():Length() > 0 then
+            ply:SetBmEnvIsInside(get_env_state(mv:GetOrigin() + vector_up * 40))
+            ply:SetBmEnvCheckTimeout(bm_vars.inside_checks_period:GetFloat() + math.random(-0.5, 0.5))
         end
 
-        if ply:get_env_is_inside() and not ply:get_in_boosted_run() then
-            ply:set_env_slowdown(Lerp(FrameTime() * 3, ply:get_env_slowdown(), bm_vars.speed.inside_multiplier:GetFloat()))
+        if ply:GetBmEnvIsInside() and not ply:GetBmInBoostedRun() then
+            ply:SetBmEnvSlowdown(Lerp(FrameTime() * 3, ply:GetBmEnvSlowdown(), bm_vars.speed.inside_multiplier:GetFloat()))
         else
-            ply:set_env_slowdown(Lerp(FrameTime() * 3, ply:get_env_slowdown(), 1))
+            ply:SetBmEnvSlowdown(Lerp(FrameTime() * 3, ply:GetBmEnvSlowdown(), 1))
         end
 
-        local slowdown = ply:get_env_slowdown()
+        local slowdown = ply:GetBmEnvSlowdown()
 
         forwardmove = forwardmove * slowdown
         sidemove = sidemove * slowdown
@@ -392,7 +319,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     if bm_vars.slowdown.turn_enabled:GetBool() then
         local mult = math.max(bm_vars.slowdown.turn_multiplier:GetFloat(), 0.05)
         local factor = math.Remap(math.Clamp(math.abs(cmd:GetMouseX() / 20), 0, 50), 0, 50, 1, (1-mult))
-        ply:set_mouse_slowdown(Lerp(FrameTime() * 50, ply:get_mouse_slowdown(), factor))
+        ply:SetBmMouseSlowdown(Lerp(FrameTime() * 50, ply:GetBmMouseSlowdown(), factor))
     end
 
     // handle being in air
@@ -411,7 +338,7 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
 
     // lerp everything
     local mult = bm_vars.interpolation_multiplier:GetFloat()
-    local more_slowdown = ply:get_mouse_slowdown() * ply:get_slowdown_on_hit()
+    local more_slowdown = ply:GetBmMouseSlowdown() * ply:GetBmSlowdownOnHit()
 
     maxspeed = maxspeed * more_slowdown
 
@@ -421,23 +348,23 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
         sidemove = sidemove * maxspeed / early_speed
     end
 
-    ply:set_lerped_forwardmove(Lerp(FrameTime() * 10 * mult * arse(ply, ply:get_lerped_forwardmove(), forwardmove), ply:get_lerped_forwardmove(), forwardmove) * more_slowdown)
-    ply:set_lerped_sidemove(Lerp(FrameTime() * 10 * mult * arse(ply, ply:get_lerped_sidemove(), sidemove), ply:get_lerped_sidemove(), sidemove) * more_slowdown)
+    ply:SetBmLerpedForwardMove(Lerp(FrameTime() * 10 * mult * arse(ply, ply:GetBmLerpedForwardMove(), forwardmove), ply:GetBmLerpedForwardMove(), forwardmove) * more_slowdown)
+    ply:SetBmLerpedSideMove(Lerp(FrameTime() * 10 * mult * arse(ply, ply:GetBmLerpedSideMove(), sidemove), ply:GetBmLerpedSideMove(), sidemove) * more_slowdown)
 
-    if math.abs(ply:get_lerped_forwardmove()) < 0.01 then
-        ply:set_lerped_forwardmove(0)
+    if math.abs(ply:GetBmLerpedForwardMove()) < 0.01 then
+        ply:SetBmLerpedForwardMove(0)
     end
 
-    if math.abs(ply:get_lerped_sidemove()) < 0.01 then
-        ply:set_lerped_sidemove(0)
+    if math.abs(ply:GetBmLerpedSideMove()) < 0.01 then
+        ply:SetBmLerpedSideMove(0)
     end
 
-    local _forward = ply:get_lerped_forwardmove()
-    local _side = ply:get_lerped_sidemove()
+    local _forward = ply:GetBmLerpedForwardMove()
+    local _side = ply:GetBmLerpedSideMove()
 
     local maxspeed_raw = math.sqrt(_side^2 + _forward^2)
 
-    ply:set_new_maxspeed(maxspeed_raw)
+    ply:SetBmNewMaxSpeed(maxspeed_raw)
 
     // apply it all
     local walktype = "walk"
@@ -445,9 +372,9 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     if mv:KeyDown(IN_WALK) then walktype = "slowwalk" end
 
     local fraction = math.Clamp(maxspeed_raw / maxspeed, 1, 2)
-    ply:set_bmfraction(Lerp(FrameTime() * 20, ply:get_bmfraction(), fraction))
+    ply:SetBmFraction(Lerp(FrameTime() * 20, ply:GetBmFraction(), fraction))
 
-    local _bmfraction = ply:get_bmfraction()
+    local _bmfraction = ply:GetBmFraction()
 
     ply:SetWalkSpeed(bm_vars.speed.walk:GetFloat() * _bmfraction)
     ply:SetRunSpeed(bm_vars.speed.run:GetFloat() * _bmfraction)
@@ -463,11 +390,10 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
     end
 
     // reduce air velocity to prevent bhopping
-    ply:set_bm_was_on_ground(ply:get_bm_on_ground())
-    ply:set_bm_on_ground(ply:OnGround())
+    ply:SetBmWasOnGround(ply:GetBmOnGround())
+    ply:SetBmOnGround(ply:OnGround())
 
-    local _bm_on_ground = ply:get_bm_on_ground()
-    if ply:get_bm_was_on_ground() != ply:get_bm_on_ground() and mv:KeyDown(IN_JUMP) and !ply:get_bm_on_ground() and ply:WaterLevel() < 3 then
+    if ply:GetBmWasOnGround() != ply:GetBmOnGround() and mv:KeyDown(IN_JUMP) and !ply:GetBmOnGround() and ply:WaterLevel() < 3 then
         local vel = mv:GetVelocity()
         vel.x = vel.x / 1.5
         vel.y = vel.y / 1.5
@@ -483,7 +409,7 @@ end)
 hook.Add("OnPlayerHitGround", "bm_playerhitground", function(ply, in_water, on_floater, speed)
     if not bm_vars.enabled:GetBool() or not bm_vars.slowdown.landing:GetBool() then return end
 
-    ply:set_slowdown_on_hit(0)
+    ply:SetBmSlowdownOnHit(0)
 end)
 
 
@@ -500,7 +426,7 @@ hook.Add("PlayerStepSoundTime", "bm_stepsoundtime_normal", function(ply, iType, 
 
     if ply:InVehicle() then return end
 
-    local fmaxspeed = ply:get_new_maxspeed()
+    local fmaxspeed = ply:GetBmNewMaxSpeed()
     local exp = bm_vars.steptime.exponent:GetFloat()
     local mult = bm_vars.steptime.multiplier:GetFloat()
     local offset = bm_vars.steptime.offset:GetFloat()
@@ -543,7 +469,7 @@ local function GetStepSoundVelocities(ply)
 end
 
 local function GetStepSoundTime(ply, iType, bWalking)
-    local fmaxspeed = ply:get_new_maxspeed()
+    local fmaxspeed = ply:GetBmNewMaxSpeed()
     local exp = bm_vars.steptime.exponent:GetFloat()
     local mult = bm_vars.steptime.multiplier:GetFloat()
     local offset = bm_vars.steptime.offset:GetFloat()
@@ -640,7 +566,7 @@ local function GetGroundSurface(ply, isAnimEvent)
 end
 
 local function PlayStepSound(ply, vecOrigin, psurface, fvol, force, isAnimEvent, animStepSide)
-    if game.MaxPlayers() > 1 and not sv_footsteps:GetBool() then return end
+    if not SINGLEPLAYER and not sv_footsteps:GetBool() then return end
 
     if not psurface then return end
 
