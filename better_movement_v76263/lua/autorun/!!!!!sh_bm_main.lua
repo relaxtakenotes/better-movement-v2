@@ -605,7 +605,7 @@ local function UpdateStepSound(ply, psurface, vecOrigin, vecVelocity, isAnimEven
 
     if not isAnimEvent then
         if (ply.m_flStepSoundTime or 0) > 0 then
-            ply.m_flStepSoundTime = ply.m_flStepSoundTime - 1000 * FrameTime()
+            ply.m_flStepSoundTime = ply.m_flStepSoundTime - 1000 * engine.TickInterval()
             if ply.m_flStepSoundTime < 0 then
                 ply.m_flStepSoundTime = 0
             end
