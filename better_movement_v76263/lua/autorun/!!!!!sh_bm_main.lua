@@ -419,56 +419,7 @@ hook.Add("PlayerStepSoundTime", "bm_stepsoundtime_slow", function(ply, iType, bW
     return math.huge
 end)
 
-hook.Add("PlayerStepSoundTime", "bm_stepsoundtime_normal", function(ply, iType, bWalking)
-    if bm_vars.slow_footsteps:GetBool() then return end
-
-    if not bm_vars.enabled:GetBool() then return end
-
-    if ply:InVehicle() then return end
-
-    local fmaxspeed = ply:GetBmNewMaxSpeed()
-    local exp = bm_vars.steptime.exponent:GetFloat()
-    local mult = bm_vars.steptime.multiplier:GetFloat()
-    local offset = bm_vars.steptime.offset:GetFloat()
-    local fsteptime = (fmaxspeed^exp/fmaxspeed)*mult + offset
-
-    if not fsteptime then return end
-    if fsteptime != fsteptime then return end
-
-    fsteptime = math.Clamp(fsteptime, bm_vars.steptime.min:GetFloat(), bm_vars.steptime.max:GetFloat())
-
-    if (iType == STEPSOUNDTIME_ON_LADDER) then
-        fsteptime = fsteptime + 100
-    elseif (iType == STEPSOUNDTIME_WATER_KNEE) then
-        fsteptime = fsteptime + 200
-    end
-
-    if (ply:Crouching()) then
-        fsteptime = fsteptime * ply:GetCrouchedWalkSpeed() + 400
-    end
-
-    return fsteptime
-end)
-
-local sv_footsteps = GetConVar("sv_footsteps")
-
-local function GetFootstepSurface(surfacename)
-    return util.GetSurfaceData(util.GetSurfaceIndex(surfacename))
-end
-
-local function GetStepSoundVelocities(ply)
-    local velwalk = 90
-    local velrun = 220
-
-	if ply:Crouching() or ply:GetMoveType() == MOVETYPE_LADDER then
-		velwalk = 60
-		velrun = 80
-    end
-
-    return velwalk, velrun
-end
-
-local function GetStepSoundTime(ply, iType, bWalking)
+function BmGetStepSoundTime(ply, iType, bWalking)
     local fmaxspeed = ply:GetBmNewMaxSpeed()
     local exp = bm_vars.steptime.exponent:GetFloat()
     local mult = bm_vars.steptime.multiplier:GetFloat()
@@ -491,6 +442,34 @@ local function GetStepSoundTime(ply, iType, bWalking)
     end
 
     return fsteptime
+end
+
+hook.Add("PlayerStepSoundTime", "bm_stepsoundtime_normal", function(ply, iType, bWalking)
+    if bm_vars.slow_footsteps:GetBool() then return end
+
+    if not bm_vars.enabled:GetBool() then return end
+
+    if ply:InVehicle() then return end
+
+    return BmGetStepSoundTime(ply, iType, bWalking)
+end)
+
+local sv_footsteps = GetConVar("sv_footsteps")
+
+local function GetFootstepSurface(surfacename)
+    return util.GetSurfaceData(util.GetSurfaceIndex(surfacename))
+end
+
+local function GetStepSoundVelocities(ply)
+    local velwalk = 90
+    local velrun = 220
+
+	if ply:Crouching() or ply:GetMoveType() == MOVETYPE_LADDER then
+		velwalk = 60
+		velrun = 80
+    end
+
+    return velwalk, velrun
 end
 
 local material_types = {
@@ -670,7 +649,7 @@ local function UpdateStepSound(ply, psurface, vecOrigin, vecVelocity, isAnimEven
 	if fLadder and speed > 0.0001 then
 		psurface = GetFootstepSurface("ladder")
 		fvol = 0.5;
-        ply.m_flStepSoundTime = GetStepSoundTime(ply, STEPSOUNDTIME_ON_LADDER, bWalking) / 1.6
+        ply.m_flStepSoundTime = BmGetStepSoundTime(ply, STEPSOUNDTIME_ON_LADDER, bWalking) / 1.6
     elseif waterlevel == 2 then
 		if ply.iSkipStep == 0 then
 			ply.iSkipStep = ply.iSkipStep + 1
@@ -685,16 +664,16 @@ local function UpdateStepSound(ply, psurface, vecOrigin, vecVelocity, isAnimEven
 
 		psurface = GetFootstepSurface("wade")
 		fvol = 0.65
-        ply.m_flStepSoundTime = GetStepSoundTime(ply, STEPSOUNDTIME_WATER_KNEE, bWalking)
+        ply.m_flStepSoundTime = BmGetStepSoundTime(ply, STEPSOUNDTIME_WATER_KNEE, bWalking)
 	elseif waterlevel == 1 then
 		psurface = GetFootstepSurface("water")
         if bWalking then fvol = 0.2 else fvol = 0.5 end
 
-        ply.m_flStepSoundTime = GetStepSoundTime(ply, STEPSOUNDTIME_WATER_FOOT, bWalking)
+        ply.m_flStepSoundTime = BmGetStepSoundTime(ply, STEPSOUNDTIME_WATER_FOOT, bWalking)
 	else
 		if not psurface then return end
 
-        ply.m_flStepSoundTime = GetStepSoundTime(ply, STEPSOUNDTIME_NORMAL, bWalking)
+        ply.m_flStepSoundTime = BmGetStepSoundTime(ply, STEPSOUNDTIME_NORMAL, bWalking)
 
         if psurface.material == MAT_CONCRETE then
             if bWalking then fvol = 0.2 else fvol = 0.5 end
