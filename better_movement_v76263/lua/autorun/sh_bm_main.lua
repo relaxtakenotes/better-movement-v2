@@ -57,25 +57,95 @@ local LINEAR_INTERPOLATION = 1
 local ANIMEVENT_TRACE = 0
 local ANIMEVENT_INTERSECT = 1
 
+// I'm fairly sure NW2 lets you have way more variables than traditional datatables, even though
+// nw2 is networked through datatables itself, i could be very wrong though
+
+function NW2AccessorFunc(tab, varname, name, iForce)
+    if (!tab) then debug.Trace() end
+
+    if (iForce == FORCE_STRING) then
+        tab["Set" .. name] = function(self, v)
+            self:SetNW2String(varname, v)
+        end
+
+        tab["Get" .. name] = function(self, v) 
+            return self:GetNW2String(varname)
+        end
+
+        return 
+    end
+
+    if (iForce == FORCE_NUMBER) then
+        tab["Set" .. name] = function(self, v)
+            self:SetNW2Float(varname, v)
+        end
+
+        tab["Get" .. name] = function(self, v) 
+            return self:GetNW2Float(varname)
+        end
+
+        return 
+    end
+
+    if (iForce == FORCE_BOOL) then
+        tab["Set" .. name] = function(self, v) 
+            self:SetNW2Bool(varname, v)
+        end
+
+        tab["Get" .. name] = function(self, v) 
+            return self:GetNW2Bool(varname)
+        end
+
+        return 
+    end
+
+    if (iForce == FORCE_ANGLE) then
+        tab["Set" .. name] = function(self, v) 
+            self:SetNW2Angle(varname, v)
+        end
+
+        tab["Get" .. name] = function(self, v) 
+            return self:GetNW2Angle(varname)
+        end
+
+        return 
+    end
+
+    if (iForce == FORCE_VECTOR) then
+        tab["Set" .. name] = function(self, v)
+            self:SetNW2Vector(varname, v)
+        end
+
+        tab["Get" .. name] = function(self, v)
+            return self:GetNW2Vector(varname)
+        end
+
+        return 
+    end
+end
+
 local player_meta = FindMetaTable("Player")
 
-AccessorFunc(player_meta, "bm_mouse_slowdown", "BmMouseSlowdown", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_previous_origin", "BmPreviousOrigin", FORCE_VECTOR)
-AccessorFunc(player_meta, "bm_current_origin", "BmCurrentOrigin", FORCE_VECTOR)
-AccessorFunc(player_meta, "bm_weakness", "BmWeakness", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_slowdown_on_hit", "BmSlowdownOnHit", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_in_speed_time", "BmInSpeedTime", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_in_speed_count", "BmInSpeedCount", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_in_boosted_run", "BmInBoostedRun", FORCE_BOOL)
-AccessorFunc(player_meta, "bm_env_check_timeout", "BmEnvCheckTimeout", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_env_is_inside", "BmEnvIsInside", FORCE_BOOL)
-AccessorFunc(player_meta, "bm_env_slowdown", "BmEnvSlowdown", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_lerped_forwardmove", "BmLerpedForwardMove", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_lerped_sidemove", "BmLerpedSideMove", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_new_maxspeed", "BmNewMaxSpeed", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_fraction", "BmFraction", FORCE_NUMBER)
-AccessorFunc(player_meta, "bm_was_on_ground", "BmWasOnGround", FORCE_BOOL)
-AccessorFunc(player_meta, "bm_on_ground", "BmOnGround", FORCE_BOOL)
+NW2AccessorFunc(player_meta, "bm_in_speed_count", "BmInSpeedCount", FORCE_NUMBER)
+
+NW2AccessorFunc(player_meta, "bm_mouse_slowdown", "BmMouseSlowdown", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_weakness", "BmWeakness", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_slowdown_on_hit", "BmSlowdownOnHit", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_in_speed_time", "BmInSpeedTime", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_env_check_timeout", "BmEnvCheckTimeout", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_env_slowdown", "BmEnvSlowdown", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_lerped_forwardmove", "BmLerpedForwardMove", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_lerped_sidemove", "BmLerpedSideMove", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_new_maxspeed", "BmNewMaxSpeed", FORCE_NUMBER)
+NW2AccessorFunc(player_meta, "bm_fraction", "BmFraction", FORCE_NUMBER)
+
+NW2AccessorFunc(player_meta, "bm_previous_origin", "BmPreviousOrigin", FORCE_VECTOR)
+NW2AccessorFunc(player_meta, "bm_current_origin", "BmCurrentOrigin", FORCE_VECTOR)
+
+NW2AccessorFunc(player_meta, "bm_in_boosted_run", "BmInBoostedRun", FORCE_BOOL)
+NW2AccessorFunc(player_meta, "bm_env_is_inside", "BmEnvIsInside", FORCE_BOOL)
+NW2AccessorFunc(player_meta, "bm_was_on_ground", "BmWasOnGround", FORCE_BOOL)
+NW2AccessorFunc(player_meta, "bm_on_ground", "BmOnGround", FORCE_BOOL)
 
 local function traceable_to_sky(pos, offset)
     local tr = util.TraceLine({start=pos + offset, endpos=pos + offset + vector_up * 56688, mask=MASK_NPCWORLDSTATIC})
@@ -84,11 +154,11 @@ local function traceable_to_sky(pos, offset)
     return false
 end
 
-local __v1 = Vector(0,0,0)
-local __v2 = Vector(120,0,0)
-local __v3 = Vector(0,120,0)
-local __v4 = Vector(-120,0,0)
-local __v5 = Vector(0,-120,0)
+local __v1 = Vector(0, 0, 0)
+local __v2 = Vector(120, 0, 0)
+local __v3 = Vector(0, 120, 0)
+local __v4 = Vector(-120, 0, 0)
+local __v5 = Vector(0, -120, 0)
 
 local function get_env_state(pos)
     local tr_1 = traceable_to_sky(pos, __v1)
@@ -218,8 +288,8 @@ hook.Add("SetupMove", "bm_setupmove", function(ply, mv, cmd)
                 Lerp(FrameTime() + math.abs(ply:GetBmSlowdownOnHit() - 1) * FrameTime() * 50,
                     ply:GetBmSlowdownOnHit(),
                     1
-                )
-            )
+               )
+           )
         else
             ply:SetBmSlowdownOnHit(1)
         end
@@ -421,6 +491,7 @@ end)
 
 function BmGetStepSoundTime(ply, iType, bWalking)
     local fmaxspeed = ply:GetBmNewMaxSpeed()
+
     local exp = bm_vars.steptime.exponent:GetFloat()
     local mult = bm_vars.steptime.multiplier:GetFloat()
     local offset = bm_vars.steptime.offset:GetFloat()
